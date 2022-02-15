@@ -42,6 +42,7 @@ void main(List<String> arguments) {
   );
   ArgResults results = parser.parse(arguments);
 
+  // If help flag is given or mandatory options are missing print help text
   if (results['help'] ||
       !results.options.contains('baseUrl') ||
       !results.options.contains('webDir') ||
@@ -51,10 +52,12 @@ void main(List<String> arguments) {
   }
 
   bool fetchOnly = results['fetchOnly'];
+  bool incremental = results['incremental'];
   String baseUrl = results['baseUrl'];
   String webDir = results['webDir'];
   String targetDir = results['targetDir'];
+  // If file are only to be fetched, do it
   if (fetchOnly) {
-    webdav_sync.syncFiles(baseUrl, webDir, targetDir);
+    webdav_sync.fetchFiles(baseUrl, webDir, targetDir, incremental);
   }
 }
