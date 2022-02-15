@@ -1,8 +1,15 @@
 # webdav_sync
 A webdav sync CLI application written in Dart.
 
-This application is not running as a daemon.
-To regularly sync files, set up a cron job or similar.
+## Implemented features
+
+| Feature             | Status |
+| ------------------- | ------ |
+| Fetch only          | X      |
+| Compare ETags       |        |
+| Daemonize           |        |
+| Bi-directional sync |        |
+
 
 ## Command-line Usage
 
@@ -17,4 +24,21 @@ To regularly sync files, set up a cron job or similar.
 -i, --interval          Sync interval in minutes if running as daemon.
 ```
 
-## Building the application
+## Run for development purposes
+
+E.g.:
+```bash
+dart run webdav_sync --fetchOnly --baseUrl "<URL to your webdav server>" --webDir "<Directory to be synced>" --targetDir "<Path to local target directory>"
+```
+
+## Building a stand-alone executable
+
+Windows:
+```bash
+dart compile exe bin/webdav_sync.dart -o bin/webdav_sync.exe
+```
+
+Linux
+```bash
+dart compile exe bin/webdav_sync.dart -o bin/webdav_sync
+```
