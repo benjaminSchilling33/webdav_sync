@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:dotenv/dotenv.dart' show load, env;
@@ -15,24 +16,28 @@ void syncFiles(String baseUrl, String webDir, String targetDir) async {
       user: username, password: password, debug: false);
 
   // Get all files
-  WebDavDirectory tld =
-      await getFilesInDirRecursively(client, webDir, webdav.File());
+  WebDavDirectory tld = await getFilesInDirRecursively(
+      client, webDir, webdav.File(isDir: true, path: '/', eTag: ''));
 
   await fetchFilesRecursively(client, tld, targetDir);
+
+  print(jsonEncode(tld.toJson()));
+  await File('$targetDir/webdav_sync_meta_data.json')
+      .writeAsString(jsonEncode(tld.toJson()));
 }
 
 Future fetchFilesRecursively(
     webdav.Client client, WebDavDirectory directory, String targetDir) async {
-  for (WebDavFile f in directory.webDavFiles) {
+  for (WebDavFile f in directory.files) {
     print(
-        'fetching file: ${f.webDavFile.name} to $targetDir/${f.webDavFile.path}');
+        'fetching file: ${f.webDavFile.name} to $targetDir${f.webDavFile.path} - ETag: ${f.webDavFile.eTag}');
     await client.read2File(
-        f.webDavFile.path!, '$targetDir/${f.webDavFile.path}');
+        f.webDavFile.path!, '$targetDir${f.webDavFile.path}');
   }
 
-  for (WebDavDirectory d in directory.subDirectories) {
-    print('creating directory: $targetDir${d.webDavFile.path}');
-    await Directory('$targetDir${d.webDavFile.path}').create();
+  for (WebDavDirectory d in directory.directories) {
+    print('creating directory: $targetDir${d.self.path}');
+    await Directory('$targetDir${d.self.path}').create();
     await fetchFilesRecursively(client, d, targetDir);
   }
 }
@@ -40,17 +45,16 @@ Future fetchFilesRecursively(
 Future<WebDavDirectory> getFilesInDirRecursively(
     webdav.Client client, String webDir, webdav.File thisFile) async {
   WebDavDirectory wdd = WebDavDirectory(
-      subDirectories: List.empty(growable: true),
-      webDavFiles: List.empty(growable: true),
-      webDavFile: thisFile);
+      directories: List.empty(growable: true),
+      files: List.empty(growable: true),
+      self: thisFile);
 
   List<webdav.File> files = await client.readDir(webDir);
   for (webdav.File f in files) {
-    if (f.isDir!) {
-      wdd.subDirectories
-          .add(await getFilesInDirRecursively(client, f.path!, f));
+    if (f.isDir != null && f.isDir == true) {
+      wdd.directories.add(await getFilesInDirRecursively(client, f.path!, f));
     } else {
-      wdd.webDavFiles.add(WebDavFile(webDavFile: f));
+      wdd.files.add(WebDavFile(webDavFile: f));
     }
   }
   return wdd;

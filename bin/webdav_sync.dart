@@ -25,6 +25,12 @@ void main(List<String> arguments) {
     help: 'Directory that will be synced with webDir directory.',
   );
   parser.addFlag(
+    'incremental',
+    abbr: 'c',
+    help:
+        'Download files only if they have changed.\nStores a JSON file with meta-data besides the files in the directory given by targetDir.',
+  );
+  parser.addFlag(
     'daemonize',
     abbr: 'd',
     help: 'Run the application as a daemon, regularly checking for new files.',
